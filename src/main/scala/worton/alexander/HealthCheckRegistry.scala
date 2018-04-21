@@ -32,8 +32,9 @@ class HealthCheckRegistry[F[_]: Monad] {
 
 
   private def runAsync(hc: HealthCheck)(implicit ec: ExecutionContext, ef: Effect[F]): F[HealthCheckResponse] = {
+    val f = Future(hc.run())
     Effect[F].async[HealthCheckResponse] { cb =>
-      Future(hc.run()).onComplete {
+      f.onComplete {
         case Success(a) => cb(Right(a))
         case Failure(e) => cb(Right(HealthCheckResponse(hc.name, Unhealthy("No response received"))))
       }

@@ -77,8 +77,8 @@ class HealthCheckRegistryTest extends WordSpec with Matchers with ScalaFutures w
 
       println(s"async runtime: $durationMillis")
 
-      durationMillis should be < 1000L
-      durationMillis should be >= 500L
+      durationMillis should be < 1200L
+      durationMillis should be >= 800L
     }
   }
 
