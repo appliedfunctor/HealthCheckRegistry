@@ -1,3 +1,3 @@
 package worton.alexander
 
-case class HealthCheck(name: String, run: () => HealthCheckResponse)
+final case class HealthCheck(name: String, run: () => HealthCheckResponse)

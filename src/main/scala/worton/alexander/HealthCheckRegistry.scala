@@ -1,14 +1,14 @@
 package worton.alexander
 
-import cats._
 import cats.effect.Effect
 import cats.implicits._
 import worton.alexander.HealthCheckResult.Unhealthy
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.higherKinds
 import scala.util.{Failure, Success}
 
-class HealthCheckRegistry[F[_]: Monad] {
+class HealthCheckRegistry[F[_]: Effect] {
 
   val healthChecks: List[HealthCheck] = List.empty
   val isAsync: Boolean = true
@@ -30,8 +30,7 @@ class HealthCheckRegistry[F[_]: Monad] {
     }
   }
 
-
-  private def runAsync(hc: HealthCheck)(implicit ec: ExecutionContext, ef: Effect[F]): F[HealthCheckResponse] = {
+  private def runAsync(hc: HealthCheck)(implicit ec: ExecutionContext): F[HealthCheckResponse] = {
     val f = Future(hc.run())
     Effect[F].async[HealthCheckResponse] { cb =>
       f.onComplete {
@@ -41,13 +40,11 @@ class HealthCheckRegistry[F[_]: Monad] {
     }
   }
 
-  private def runSync(hc: HealthCheck)(implicit ef: Effect[F]): F[HealthCheckResponse] = {
+  private def runSync(hc: HealthCheck): F[HealthCheckResponse] = {
     Effect[F].pure(hc.run())
   }
 
-  //TODO these should be fired off asynchronously
-  def runHealthChecks()(implicit ef: Effect[F], ec: ExecutionContext): F[List[HealthCheckResponse]] =
+  def runHealthChecks()(implicit ec: ExecutionContext): F[List[HealthCheckResponse]] =
     if(!isAsync) healthChecks.map(runSync).sequence[F, HealthCheckResponse]
     else healthChecks.map(runAsync).sequence[F, HealthCheckResponse]
-
 }
